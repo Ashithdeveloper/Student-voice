@@ -26,7 +26,6 @@ export default function SignUp() {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      // clearError won't cause infinite loops if it's only dispatched when `error` exists
       dispatch(clearError());
     }
   }, [error, dispatch]);
@@ -34,9 +33,8 @@ export default function SignUp() {
   // Redirect on signup success — guarded by ref
   useEffect(() => {
     if (user && !redirectedRef.current) {
-      redirectedRef.current = true; // ensure we only navigate once
+      redirectedRef.current = true;
       toast.success("Signup successful!");
-      // use replace to avoid creating back/forward navigation loops
       navigate("/home", { replace: true });
     }
   }, [user, navigate]);
