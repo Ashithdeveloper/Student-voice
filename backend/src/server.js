@@ -17,7 +17,7 @@ app.use("/api/user", UserRouter);
 app.use("/api/questions", QuestionRouter);
 job.start();
 
-app.get("/", (req, res) => res.send("Server is running"));
+app.get("/", (req, res) => res.send("Server is running............................"));
 
 
 
