@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../homepage.dart';
+import '../home/homepage.dart';
+import '../home/mainpage.dart';
 import 'user_signup.dart';
 
 class UserLoginPage extends StatefulWidget {
@@ -60,7 +61,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const HomePage()),
+              MaterialPageRoute(builder: (_) => const MainPage()),
             );
           }
         } else {

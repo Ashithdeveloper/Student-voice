@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
-import '../homepage.dart';
+import '../home/homepage.dart';
+import '../home/mainpage.dart';
 import 'student_login.dart';
 
 class StudentSignupPage extends StatefulWidget {
@@ -150,7 +151,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const MainPage()),
         );
       } else {
         final data = json.decode(responseBody);

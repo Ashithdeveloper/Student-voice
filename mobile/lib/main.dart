@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/authpage.dart';
 import 'login/login_select_page.dart';
 
 void main() {
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: Colors.indigo,
         scaffoldBackgroundColor: Colors.grey.shade100,
       ),
-      home: const LoginSelectionPage(),
+      home: const AuthPage(),
     );
   }
 }
