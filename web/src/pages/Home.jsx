@@ -1,19 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchColleges } from "../slices/surveySlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useViewer } from "../hooks/useViewer"; // import our hook
+import { useViewer } from "../hooks/useViewer"; // centralized hook
 
 export default function CollegeSurveyDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { colleges = [], loading = {} } = useSelector((state) => state.survey || {});
-  const isViewer = useViewer(); // centralized flag
+  const isViewer = useViewer(); 
 
   useEffect(() => {
     dispatch(fetchColleges());
   }, [dispatch]);
+
+  const uniqueColleges = useMemo(() => {
+    const seen = new Set();
+    return colleges.filter((college) => {
+      const lower = college.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [colleges]);
 
   const handleTakeSurvey = (college) => {
     if (!isViewer) navigate(`/survey/${encodeURIComponent(college)}`);
@@ -29,11 +39,11 @@ export default function CollegeSurveyDashboard() {
 
       {loading.colleges ? (
         <p className="text-center text-gray-500 animate-pulse">Loading colleges...</p>
-      ) : colleges.length === 0 ? (
+      ) : uniqueColleges.length === 0 ? (
         <p className="text-center text-gray-500">No colleges available.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {colleges.map((college, idx) => (
+          {uniqueColleges.map((college, idx) => (
             <motion.div
               key={college}
               whileHover={{ scale: 1.03 }}
