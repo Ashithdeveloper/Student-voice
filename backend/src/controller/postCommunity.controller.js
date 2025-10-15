@@ -141,7 +141,10 @@ export const userPostList = async (req, res) => {
 //all post list 
 export const allPostList = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 });
+         const posts = await Post.find()
+           .sort({ createdAt: -1 })
+           .populate("user", "name isVerified ,role");
+
         if(!posts) {
             return res.status(404).json({ message: "Posts not found", success: false });
         }
