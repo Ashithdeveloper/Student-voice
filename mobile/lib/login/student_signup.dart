@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile/login/student_login.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'student_login.dart';
 
 class StudentSignupPage extends StatefulWidget {
   const StudentSignupPage({super.key});
@@ -20,6 +23,9 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
   File? idCardImage;
   File? selfieImage;
 
+  bool _isObscure = true;
+  bool _isLoading = false;
+
   final List<String> tamilNaduColleges = [
     "Anna University, Chennai",
     "PSG College of Technology, Coimbatore",
@@ -27,13 +33,12 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     "SSN College of Engineering, Chennai",
     "Thiagarajar College of Engineering, Madurai",
     "Kumaraguru College of Technology, Coimbatore",
+    "Mar Ephraem College of Engineering and Technology",
     "VIT University, Vellore",
     "SRM Institute of Science and Technology, Kattankulathur",
     "SASTRA University, Thanjavur",
     "Government College of Technology, Coimbatore",
   ];
-
-  bool _isObscure = true;
 
   Future<void> pickImage(bool isSelfie) async {
     final picker = ImagePicker();
@@ -51,6 +56,100 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     }
   }
 
+  Future<void> signUp() async {
+    if (nameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        collegeIdController.text.isEmpty ||
+        selectedCollege == null ||
+        idCardImage == null ||
+        selfieImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields and upload images")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
+    final uri = Uri.parse("https://student-voice.onrender.com/api/auth/studentsignup");
+
+    var request = http.MultipartRequest('POST', uri);
+    request.fields['name'] = nameController.text.trim();
+    request.fields['email'] = emailController.text.trim();
+    request.fields['password'] = passwordController.text.trim();
+    request.fields['collegeId'] = collegeIdController.text.trim();
+    request.fields['collegename'] = selectedCollege!;
+
+    request.files.add(await http.MultipartFile.fromPath('idCard', idCardImage!.path));
+    request.files.add(await http.MultipartFile.fromPath('liveselfie', selfieImage!.path));
+
+    // 🔍 Log the data being sent
+    print("\n============================");
+    print("📤 Sending Signup Request...");
+    print("============================");
+    print("➡️ URL: $uri");
+    print("➡️ Method: POST (multipart/form-data)");
+    print("➡️ Fields:");
+    request.fields.forEach((key, value) {
+      print("   $key: $value");
+    });
+    print("➡️ Files:");
+    for (var file in request.files) {
+      print("   ${file.field}: ${file.filename}");
+    }
+    print("============================\n");
+
+    try {
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
+
+      // 🔍 Log the raw response
+      print("📥 Response Received:");
+      print("➡️ Status Code: ${response.statusCode}");
+      print("➡️ Response Body: $responseBody");
+      print("============================\n");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(responseBody);
+        final token = data['token'];
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Signup Successful!")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const StudentLoginPage()),
+        );
+      } else {
+        final data = json.decode(responseBody);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Signup failed')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
+
+      print("❌ Error during signup: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +161,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
             children: [
               const SizedBox(height: 30),
               const Text(
-                "Create Student Account ",
+                "Create Student Account",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -75,7 +174,6 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-
               _buildCard(
                 child: Column(
                   children: [
@@ -117,23 +215,21 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
                     ),
                     const SizedBox(height: 16),
                     _buildImagePicker(
-                        title: "Upload College ID Card",
-                        file: idCardImage,
-                        onTap: () => pickImage(false)),
+                      title: "Upload College ID Card",
+                      file: idCardImage,
+                      onTap: () => pickImage(false),
+                    ),
                     const SizedBox(height: 12),
                     _buildImagePicker(
-                        title: "Take Live Selfie",
-                        file: selfieImage,
-                        onTap: () => pickImage(true)),
+                      title: "Take Live Selfie",
+                      file: selfieImage,
+                      onTap: () => pickImage(true),
+                    ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text("Student Sign-Up Clicked")));
-                        },
+                        onPressed: _isLoading ? null : signUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -142,9 +238,27 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
                           ),
                           elevation: 4,
                         ),
-                        child: const Text(
+                        child: _isLoading
+                            ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text("Signing Up...",
+                                style: TextStyle(fontSize: 18)),
+                          ],
+                        )
+                            : const Text(
                           "Sign Up",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 18),
                         ),
                       ),
                     ),
@@ -176,7 +290,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
                     const SizedBox(height: 20),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -228,16 +342,17 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
         labelText: "Select College",
         prefixIcon: const Icon(Icons.school_outlined),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
       value: selectedCollege,
-      isExpanded: true, // important for long text
+      isExpanded: true,
       items: tamilNaduColleges
           .map((college) => DropdownMenuItem(
         value: college,
         child: Text(
           college,
-          overflow: TextOverflow.ellipsis, // prevents overflow
+          overflow: TextOverflow.ellipsis,
         ),
       ))
           .toList(),
@@ -248,7 +363,6 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
       },
     );
   }
-
 
   Widget _buildImagePicker({
     required String title,
@@ -274,11 +388,10 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                file == null ? title : "Uploaded: ${file.path.split('/').last}",
+                title,
                 style: TextStyle(
-                  color: file == null ? Colors.grey.shade700 : Colors.green,
-                  fontWeight:
-                  file == null ? FontWeight.normal : FontWeight.bold,
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),

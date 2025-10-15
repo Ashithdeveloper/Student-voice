@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:mobile/login/student_signup.dart';
+import '../homepage.dart'; // 👈 Replace with your actual homepage file path
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -12,6 +15,53 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isObscure = true;
+  bool _isLoading = false;
+
+  Future<void> loginStudent() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter both email and password")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse("https://student-voice.onrender.com/api/auth/login"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "password": password}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Login successful!")),
+        );
+
+        // Navigate to homepage after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Login failed")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +74,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
             children: [
               const SizedBox(height: 30),
               const Text(
-                "Student Login ",
+                "Student Login",
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -67,21 +117,23 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Login clicked")),
-                          );
-                        },
+                        onPressed: _isLoading ? null : loginStudent,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 4,
                         ),
-                        child: const Text(
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                            : const Text(
                           "Login",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 18),
                         ),
                       ),
                     ),
