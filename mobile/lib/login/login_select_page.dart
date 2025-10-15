@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/login/student_login.dart';
 import 'package:mobile/login/user_login.dart';
 
-
 class LoginSelectionPage extends StatefulWidget {
   const LoginSelectionPage({super.key});
 
@@ -28,7 +27,7 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
           children: [
             const SizedBox(height: 30),
             const Text(
-              "Welcome to Student's Voice 👋",
+              "Welcome to Student's Voice ",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -61,7 +60,10 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () => _switchPage(0),
-                      child: const Text("Student"),
+                      child: const Text(
+                        "Student",
+                        style: TextStyle(fontSize: 15),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -79,7 +81,10 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () => _switchPage(1),
-                      child: const Text("User"),
+                      child: const Text(
+                        "User",
+                        style: TextStyle(fontSize: 15),
+                      ),
                     ),
                   ),
                 ],
@@ -88,22 +93,25 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
 
             const SizedBox(height: 30),
 
-            // Card Switcher
+            // Card that switches
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.1, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                ),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.1, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
                 child: _currentPage == 0
                     ? _buildCard(
+                  context,
                   key: const ValueKey("student"),
                   icon: Icons.school_outlined,
                   title: "Student Login",
@@ -126,6 +134,7 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
                   },
                 )
                     : _buildCard(
+                  context,
                   key: const ValueKey("user"),
                   icon: Icons.person_outline,
                   title: "User Login",
@@ -155,26 +164,31 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
     );
   }
 
-  Widget _buildCard({
-    required Key key,
-    required IconData icon,
-    required String title,
-    required String description,
-    required List<String> points,
-    required String buttonText,
-    required Color buttonColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildCard(
+      BuildContext context, {
+        required Key key,
+        required IconData icon,
+        required String title,
+        required String description,
+        required List<String> points,
+        required String buttonText,
+        required Color buttonColor,
+        required VoidCallback onTap,
+      }) {
     return Padding(
       key: key,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [Colors.white, buttonColor.withOpacity(0.05)],
+            colors: [
+              Colors.white,
+              buttonColor.withOpacity(0.05),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -187,6 +201,7 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
               radius: 36,
@@ -194,35 +209,48 @@ class _LoginSelectionPageState extends State<LoginSelectionPage> {
               child: Icon(icon, color: buttonColor, size: 32),
             ),
             const SizedBox(height: 20),
-            Text(title,
-                style:
-                const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
-            Text(description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15, color: Colors.black54)),
+            Text(
+              description,
+              style: const TextStyle(fontSize: 15, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: points
-                  .map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(p),
+                  .map((point) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Text(
+                  point,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ))
                   .toList(),
             ),
             const Spacer(),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: buttonColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 4,
+                ),
+                onPressed: onTap,
+                child: Text(
+                  buttonText,
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
+                ),
               ),
-              onPressed: onTap,
-              child: Text(buttonText,
-                  style: const TextStyle(fontSize: 15, color: Colors.white)),
-            ),
+            )
           ],
         ),
       ),

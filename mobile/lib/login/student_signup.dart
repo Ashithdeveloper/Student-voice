@@ -33,8 +33,10 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     "Government College of Technology, Coimbatore",
   ];
 
+  bool _isObscure = true;
+
   Future<void> pickImage(bool isSelfie) async {
-    final ImagePicker picker = ImagePicker();
+    final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: isSelfie ? ImageSource.camera : ImageSource.gallery,
     );
@@ -49,186 +51,204 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     }
   }
 
-  bool _isObscure = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Student Signup"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const Text(
-              "Create Student Account",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-
-            // Full Name
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: "Full Name",
-                prefixIcon: const Icon(Icons.person_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      backgroundColor: Colors.grey[100],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 30),
+              const Text(
+                "Create Student Account ",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Email
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: "Email",
-                prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              const SizedBox(height: 8),
+              const Text(
+                "Sign up securely to access surveys and participate seamlessly",
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-            // College Dropdown
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: "Select College",
-                prefixIcon: const Icon(Icons.school_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              value: selectedCollege,
-              items: tamilNaduColleges
-                  .map((college) =>
-                  DropdownMenuItem(value: college, child: Text(college)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedCollege = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // College ID
-            TextField(
-              controller: collegeIdController,
-              decoration: InputDecoration(
-                labelText: "College ID",
-                prefixIcon: const Icon(Icons.badge_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Password
-            TextField(
-              controller: passwordController,
-              obscureText: _isObscure,
-              decoration: InputDecoration(
-                labelText: "Password",
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isObscure
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isObscure = !_isObscure;
-                    });
-                  },
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // ID Card Upload
-            _buildImagePicker(
-              title: "Upload College ID Card",
-              file: idCardImage,
-              onTap: () => pickImage(false),
-            ),
-            const SizedBox(height: 16),
-
-            // Selfie Upload
-            _buildImagePicker(
-              title: "Take Live Selfie",
-              file: selfieImage,
-              onTap: () => pickImage(true),
-            ),
-            const SizedBox(height: 30),
-
-            // Sign Up Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text("Student Sign-Up Clicked")),
-                  );
-                },
-                child: const Text(
-                  "Sign Up",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // 🔙 Back to Login Text
-            GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const StudentLoginPage(),
-                  ),
-                );
-              },
-              child: const Text.rich(
-                TextSpan(
-                  text: "Already have an account? ",
-                  style: TextStyle(color: Colors.black87),
+              _buildCard(
+                child: Column(
                   children: [
-                    TextSpan(
-                      text: "Login",
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
+                    _buildTextField(
+                      controller: nameController,
+                      label: "Full Name",
+                      icon: Icons.person_outline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: emailController,
+                      label: "Email",
+                      icon: Icons.email_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDropdown(),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: collegeIdController,
+                      label: "College ID",
+                      icon: Icons.badge_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: passwordController,
+                      label: "Password",
+                      icon: Icons.lock_outline,
+                      obscure: _isObscure,
+                      suffixIcon: IconButton(
+                        icon: Icon(_isObscure
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined),
+                        onPressed: () {
+                          setState(() {
+                            _isObscure = !_isObscure;
+                          });
+                        },
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    _buildImagePicker(
+                        title: "Upload College ID Card",
+                        file: idCardImage,
+                        onTap: () => pickImage(false)),
+                    const SizedBox(height: 12),
+                    _buildImagePicker(
+                        title: "Take Live Selfie",
+                        file: selfieImage,
+                        onTap: () => pickImage(true)),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text("Student Sign-Up Clicked")));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Text(
+                          "Sign Up",
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const StudentLoginPage(),
+                          ),
+                        );
+                      },
+                      child: const Text.rich(
+                        TextSpan(
+                          text: "Already have an account? ",
+                          style: TextStyle(color: Colors.black87),
+                          children: [
+                            TextSpan(
+                              text: "Login",
+                              style: TextStyle(
+                                  color: Colors.indigo,
+                                  fontWeight: FontWeight.bold),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          )
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildDropdown() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: "Select College",
+        prefixIcon: const Icon(Icons.school_outlined),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      ),
+      value: selectedCollege,
+      isExpanded: true, // important for long text
+      items: tamilNaduColleges
+          .map((college) => DropdownMenuItem(
+        value: college,
+        child: Text(
+          college,
+          overflow: TextOverflow.ellipsis, // prevents overflow
+        ),
+      ))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          selectedCollege = value;
+        });
+      },
+    );
+  }
+
 
   Widget _buildImagePicker({
     required String title,
@@ -243,7 +263,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade400),
           borderRadius: BorderRadius.circular(12),
-          color: Colors.grey.shade100,
+          color: Colors.grey[50],
         ),
         child: Row(
           children: [
