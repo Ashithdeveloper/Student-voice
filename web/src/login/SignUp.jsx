@@ -69,7 +69,7 @@ export default function SignUp() {
       >
         <div className="bg-white/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-            User Sign Up
+            User SignUp
           </h2>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <input
