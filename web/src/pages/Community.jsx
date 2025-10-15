@@ -12,7 +12,7 @@ export default function Community() {
   }, [dispatch]);
 
   return (
-    <div className="p-4">
+    <div className="p-4 text-center font-serif">
       <h1 className="text-2xl font-bold mb-4">Community Discussions</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {discussions.map((discussion) => (

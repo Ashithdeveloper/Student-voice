@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout, fetchUserProfile } from "../slices/authSlice";
 import ProfileStats from "../components/ProfileStats";
 import { motion } from "framer-motion";
-import { FaCheckCircle, FaTimesCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaCheckCircle, FaUserCircle, FaTimesCircle, FaSignOutAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 export default function Profile() {
@@ -31,7 +31,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 mt-10 px-4 sm:px-6 md:px-10 lg:px-0">
+    <div className="flex flex-col font-serif items-center gap-8 mt-10 px-4 sm:px-6 md:px-10 lg:px-0">
+      <h1 className="text-3xl font-bold mb-4">Profile</h1>
       {/* Profile Card */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -39,6 +40,18 @@ export default function Profile() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 sm:p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-shadow duration-500"
       >
+        {/* Profile Picture */}
+        <div className="flex justify-center">
+          {user.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt="Profile"
+              className="w-24 h-24 rounded-full border-4 border-white shadow-md"
+            />
+          ) : (
+            <FaUserCircle className="w-24 h-24 text-gray-400" />
+          )}
+        </div>
         <div className="flex flex-col items-center gap-6 font-serif">
           {/* Name */}
           <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-600 text-center">
