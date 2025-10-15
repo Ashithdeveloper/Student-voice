@@ -11,13 +11,14 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
+
 app.use(express.json());
 
 app.use("/api/user", UserRouter);
 app.use("/api/questions", QuestionRouter);
 job.start();
 
-app.get("/", (req, res) => res.send("Server is running"));
+app.get("/", (req, res) => res.send("Server is running......"));
 
 
 
