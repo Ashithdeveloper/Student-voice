@@ -35,7 +35,6 @@ export default function Login() {
       return;
     }
 
-    // Prevent student login and redirect to signup notice
     if (activeTab === "student") {
       navigate("/mobilesignupnotice");
       return;
