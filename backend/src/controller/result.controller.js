@@ -162,11 +162,14 @@ export const getCollegeResult = async (req, res) => {
                 message: "Results not found for this college",
             });
         }
+        //how many students are there
+        const studentCount = result.student.length;
         console.log(result);
         return res.status(200).json({
             success: true,
             message: "Results fetched successfully",
             result,
+            studentCount
         });
     } catch (error) {
         console.log(error);

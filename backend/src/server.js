@@ -4,7 +4,9 @@ import connectDB from "./db/Database.js";
 import UserRouter from "./Router/user.route.js";
 import dotenv from "dotenv";
 import QuestionRouter from "./Router/question.route.js";
+import mentorai from "./Router/mentorChart.routes.js"
 import job from "./config/cors.js";
+import postRoute from "./Router/post.route.js";
 
 dotenv.config();
 
@@ -16,6 +18,10 @@ app.use(express.json());
 
 app.use("/api/user", UserRouter);
 app.use("/api/questions", QuestionRouter);
+app.use("/api/mentorchart", mentorai);
+app.use("/api/post" , postRoute);
+
+
 job.start();
 
 app.get("/", (req, res) => res.send("Server is running......"));
