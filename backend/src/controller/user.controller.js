@@ -1,13 +1,11 @@
-import User from "../model/User.model.js";
+import User from "../models/user.model.js";
 import { configDotenv } from "dotenv";
 configDotenv();
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs/promises"; // Use fs.promises for async file operations
-
-import { hashPassword, comparePassword } from "../config/passwordHashing.js";
-import { generateToken } from "../token/token.js";
-
-// import { generatequestion } from "./question.controller.js";
+import { generateToken } from "../Token/genToken.js";
+import { hashPassword , comparePassword } from "../config/passwordencrypt.js";
+import { generatequestion } from "./question.controller.js";
 
 // API Key client
 const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -27,6 +25,7 @@ async function fileToGenerativePart(filePath, mimeType) {
     throw new Error("Failed to process uploaded file.");
   }
 }
+
 
 // Function to handle user signup
 export const signup = async (req, res) => {
@@ -52,10 +51,12 @@ export const signup = async (req, res) => {
 
     // Ensure files are uploaded
     if (!liveselfie || !idCard) {
-      return res.status(400).json({
-        message: "Both ID card and selfie are required.",
-        success: false,
-      });
+      return res
+        .status(400)
+        .json({
+          message: "Both ID card and selfie are required.",
+          success: false,
+        });
     }
 
     // Check if user already exists
@@ -78,7 +79,7 @@ export const signup = async (req, res) => {
     const idCardPart = await fileToGenerativePart(idCard.path, idCard.mimetype);
 
     // AI verification prompt
-    const verificationPrompt = `
+ const verificationPrompt = `
 You are an identity verification expert. Verify whether the provided text details match the college student ID card and the live selfie image.
 
 Check for:
@@ -118,6 +119,7 @@ If any mismatch occurs, respond with:
 }
 `;
 
+
     // Send multimodal request to Gemini
     const model = genai.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent({
@@ -156,10 +158,12 @@ If any mismatch occurs, respond with:
     // Verification check
     if (!parsedOutput.verified) {
       await cleanUpFiles();
-      return res.status(400).json({
-        message: parsedOutput.reason || "Verification failed",
-        success: false,
-      });
+      return res
+        .status(400)
+        .json({
+          message: parsedOutput.reason || "Verification failed",
+          success: false,
+        });
     }
 
     // Hash password
@@ -177,7 +181,7 @@ If any mismatch occurs, respond with:
     await user.save();
 
     // Generate default questions for the college
-    // await generatequestion(collegename);
+    await generatequestion(collegename);
 
     // Cleanup uploaded files
     await cleanUpFiles();
@@ -199,41 +203,39 @@ If any mismatch occurs, respond with:
       .json({ message: "Server error during signup", success: false });
   }
 };
-export const userLogin = async (req, res) => {
-  try {
-    const { email, password, name, role } = req.body;
-    if (!email || !password || !name || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+export const userLogin = async(req, res) => {
+    try {
+      const { email, password , name , role } = req.body;
+      if(!email || !password || !name || !role){
+        return res.status(400).json({message : "All fields are required"});
+      }
+      const existingUser = await User.findOne({ email });
+      if(existingUser){
+        return res.status(400).json({message : "User already exists"});
+      }
+      const hashedPassword = await hashPassword(password);
+      const newuser = new User({
+        name,
+        email,
+        password : hashedPassword,
+        role
+      })
+      await newuser.save();
+      const token = generateToken(newuser._id);
+      return res.status(200).json({message : "User created successfully", token , user : newuser}); 
+    } catch (error) {
+      console.log(error);
     }
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-    const hashedPassword = await hashPassword(password);
-    const newuser = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    });
-    await newuser.save();
-    const token = generateToken(newuser._id);
-    return res
-      .status(200)
-      .json({ message: "User created successfully", token, user: newuser });
-  } catch (error) {
-    console.log(error);
-  }
-};
+}
 
-export const getme = async (req, res) => {
+export const getme = async(req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     return res.status(200).json(user);
   } catch (error) {
     console.log(error);
   }
-};
+}
 
 export const login = async (req, res) => {
   try {
@@ -256,7 +258,7 @@ export const login = async (req, res) => {
     const token = generateToken(user._id);
     return res
       .status(200)
-      .json({ message: "User logged in successfully", token, user });
+      .json({ message: "User logged in successfully", token , user});
   } catch (error) {
     console.error("Login error:", error);
     return res

@@ -1,9 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDB from './db/Database.js';
-import authRouter from "./Router/user.route.js"
-import job from './config/cors.js';
+import express from "express";
+import cors from "cors";
+import connectDB from "./db/Database.js";
+import UserRouter from "./Router/user.route.js";
+import dotenv from "dotenv";
+import QuestionRouter from "./Router/question.route.js";
+import job from "./config/cors.js";
 
 dotenv.config();
 
@@ -11,16 +12,19 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-const port = process.env.PORT || 4000;
+
+app.use("/api/user", UserRouter);
+app.use("/api/questions", QuestionRouter);
+job.start();
 
 app.get("/", (req, res) => res.send("Server is running"));
 
-job.start();
 
-//auth router 
-app.use("/api/auth" , authRouter);
 
-app.listen(port, () => {
-    connectDB();
-    console.log('Server is running on port 4000');
-});
+const PORT = process.env.PORT || 4000;
+
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+.catch((err) => console.error("Failed to connect to DB:", err));
