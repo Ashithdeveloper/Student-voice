@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaUserGraduate, FaUserTie } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, clearError } from "../slices/authSlice";
+import { loginUser, clearError, fetchUserProfile } from "../slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -13,7 +13,7 @@ export default function Login() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, user, error } = useSelector((state) => state.auth || {});
+  const { loading, user, error, token } = useSelector((state) => state.auth || {});
 
   // Handle errors
   useEffect(() => {
@@ -23,12 +23,18 @@ export default function Login() {
     }
   }, [error, dispatch]);
 
-  // Redirect on login success
+  // Redirect and fetch profile on login
   useEffect(() => {
-    if (user) navigate("/home");
-  }, [user, navigate]);
+    const fetchProfile = async () => {
+      if (token && !user) {
+        await dispatch(fetchUserProfile());
+      }
+      if (user) navigate("/home");
+    };
+    fetchProfile();
+  }, [token, user, dispatch, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       toast.warn("Please enter both email and password");
@@ -40,7 +46,13 @@ export default function Login() {
       return;
     }
 
-    dispatch(loginUser({ email, password }));
+    const resultAction = await dispatch(loginUser({ email, password }));
+
+    if (loginUser.fulfilled.match(resultAction)) {
+      // Fetch user profile after successful login
+      await dispatch(fetchUserProfile());
+      navigate("/home");
+    }
   };
 
   const handleStudentSignup = () => {
