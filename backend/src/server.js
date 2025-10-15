@@ -12,6 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 const port = process.env.PORT || 4000;
+
+app.get("/", (req, res) => {
+    res.send("Server is running");
+})
 //job.start();
 
 //auth router 
