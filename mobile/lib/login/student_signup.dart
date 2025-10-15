@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:http_parser/http_parser.dart';
+import '../homepage.dart';
 import 'student_login.dart';
 
 class StudentSignupPage extends StatefulWidget {
@@ -75,18 +77,37 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     });
 
     final uri = Uri.parse("https://student-voice.onrender.com/api/user/signup");
-
     var request = http.MultipartRequest('POST', uri);
+
+    // Add text fields
     request.fields['name'] = nameController.text.trim();
     request.fields['email'] = emailController.text.trim();
     request.fields['password'] = passwordController.text.trim();
     request.fields['collegeId'] = collegeIdController.text.trim();
     request.fields['collegename'] = selectedCollege!;
 
-    request.files.add(await http.MultipartFile.fromPath('idCard', idCardImage!.path));
-    request.files.add(await http.MultipartFile.fromPath('liveselfie', selfieImage!.path));
+    // Read files as bytes and add with explicit content type
+    final idCardBytes = await idCardImage!.readAsBytes();
+    final selfieBytes = await selfieImage!.readAsBytes();
 
-    // 🔍 Log the data being sent
+    print("📤 ID Card size: ${idCardBytes.length} bytes");
+    print("📤 Selfie size: ${selfieBytes.length} bytes");
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'idCard',
+      idCardBytes,
+      filename: 'idCard.jpg',
+      contentType: MediaType('image', 'jpeg'),
+    ));
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'liveselfie',
+      selfieBytes,
+      filename: 'selfie.jpg',
+      contentType: MediaType('image', 'jpeg'),
+    ));
+
+    // Logging for debug
     print("\n============================");
     print("📤 Sending Signup Request...");
     print("============================");
@@ -98,7 +119,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     });
     print("➡️ Files:");
     for (var file in request.files) {
-      print("   ${file.field}: ${file.filename}");
+      print("   ${file.field}: ${file.filename} (${file.length} bytes, type: ${file.contentType})");
     }
     print("============================\n");
 
@@ -110,13 +131,13 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
         _isLoading = false; // Stop loading
       });
 
-      // 🔍 Log the raw response
+      // Logging response
       print("📥 Response Received:");
       print("➡️ Status Code: ${response.statusCode}");
       print("➡️ Response Body: $responseBody");
       print("============================\n");
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(responseBody);
         final token = data['token'];
 
@@ -129,7 +150,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const StudentLoginPage()),
+          MaterialPageRoute(builder: (_) => const HomePage()),
         );
       } else {
         final data = json.decode(responseBody);
@@ -139,16 +160,14 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
       }
     } catch (e) {
       setState(() {
-        _isLoading = false; // Stop loading
+        _isLoading = false;
       });
-
       print("❌ Error during signup: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
