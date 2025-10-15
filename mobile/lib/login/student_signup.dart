@@ -33,7 +33,8 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     "Anna University, Chennai",
     "PSG College of Technology, Coimbatore",
     "Coimbatore Institute of Technology",
-    "SSN College of Engineering, Chennai",
+    "Mount Zion college of Engineering and Technology"
+    "SSN College of Engineering, Tiruchirapalli",
     "Thiagarajar College of Engineering, Madurai",
     "Kumaraguru College of Technology, Coimbatore",
     "Mar Ephraem College of Engineering and Technology",
