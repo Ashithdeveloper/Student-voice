@@ -15,7 +15,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { loading, user, error, token } = useSelector((state) => state.auth || {});
 
-  // Handle errors
+  // Handle errors from slice
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -23,45 +23,35 @@ export default function Login() {
     }
   }, [error, dispatch]);
 
-  // Redirect and fetch profile on login
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (token && !user) {
-        await dispatch(fetchUserProfile());
-      }
-      if (user) navigate("/home");
-    };
-    fetchProfile();
-  }, [token, user, dispatch, navigate]);
-
+  // Submit login
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!email || !password) {
       toast.warn("Please enter both email and password");
       return;
     }
 
+    // Student tab redirects to mobile notice
     if (activeTab === "student") {
       navigate("/mobilesignupnotice");
       return;
     }
 
+    // Dispatch login
     const resultAction = await dispatch(loginUser({ email, password }));
 
     if (loginUser.fulfilled.match(resultAction)) {
-      // Fetch user profile after successful login
+      toast.success("Login successful!");
       await dispatch(fetchUserProfile());
       navigate("/home");
+    } else if (loginUser.rejected.match(resultAction)) {
+      toast.error(resultAction.payload || "Login failed");
     }
   };
 
-  const handleStudentSignup = () => {
-    navigate("/mobilesignupnotice");
-  };
-
-  const handleUserSignup = () => {
-    navigate("/signup");
-  };
+  const handleStudentSignup = () => navigate("/mobilesignupnotice");
+  const handleUserSignup = () => navigate("/signup");
 
   const boxGradient =
     activeTab === "student"
@@ -69,7 +59,7 @@ export default function Login() {
       : "bg-gradient-to-br from-green-400 via-blue-400 to-purple-400";
 
   return (
-    <div className="min-h-screen font-serif flex items-center justify-center px-4">
+    <div className="min-h-screen font-serif flex items-center justify-center px-4 bg-gray-50">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -125,7 +115,6 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
             <button
               type="submit"
               disabled={loading}

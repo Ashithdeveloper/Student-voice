@@ -14,15 +14,12 @@ export default function SignUp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Select primitives separately (prevents selector returning new object each render)
   const loading = useSelector((state) => state.auth?.loading ?? false);
-  const user = useSelector((state) => state.auth?.user ?? null);
   const error = useSelector((state) => state.auth?.error ?? null);
 
-  // Prevent multiple navigations
   const redirectedRef = useRef(false);
 
-  // Handle errors (clear after showing)
+  // Show slice errors
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -30,16 +27,7 @@ export default function SignUp() {
     }
   }, [error, dispatch]);
 
-  // Redirect on signup success — guarded by ref
-  useEffect(() => {
-    if (user && !redirectedRef.current) {
-      redirectedRef.current = true;
-      toast.success("Signup successful!");
-      navigate("/home", { replace: true });
-    }
-  }, [user, navigate]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !password || !confirmPassword) {
@@ -51,8 +39,14 @@ export default function SignUp() {
       return;
     }
 
-    // Implicitly set role as "viewer"
-    dispatch(registerUser({ name, email, password, role: "viewer" }));
+    const resultAction = await dispatch(registerUser({ name, email, password, role: "viewer" }));
+
+    if (registerUser.fulfilled.match(resultAction)) {
+      toast.success("Signup successful!");
+      navigate("/home", { replace: true });
+    } else if (registerUser.rejected.match(resultAction)) {
+      toast.error(resultAction.payload || "Signup failed");
+    }
   };
 
   const gradient = "from-pink-200 via-yellow-200 to-green-200";
@@ -98,7 +92,6 @@ export default function SignUp() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-
             <button
               type="submit"
               disabled={loading}

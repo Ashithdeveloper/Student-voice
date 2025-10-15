@@ -1,8 +1,11 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useEffect } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { FaHome, FaSearch, FaUser, FaRobot, FaUsers } from "react-icons/fa";
 
 export default function Navigation() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const navItems = [
     { to: "/", label: "Home", icon: <FaHome /> },
     { to: "/search", label: "Search", icon: <FaSearch /> },
@@ -11,15 +14,19 @@ export default function Navigation() {
     { to: "/community", label: "Community", icon: <FaUsers /> },
   ];
 
+  // Redirect to home on login or initial load
+  useEffect(() => {
+    if (location.pathname === "/login" || location.pathname === "/") {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <>
-      {/* 🌈 Desktop Sidebar */}
-      <aside
-        className="hidden font-serif md:flex flex-col fixed top-0 left-0 h-full w-64
-          bg-gradient-to-b from-[#eef2ff] via-[#e0e7ff] to-[#f0f9ff]
-          backdrop-blur-md shadow-xl border-r border-white/20 p-5"
-      >
-        {/* Header */}
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col fixed top-0 left-0 h-full w-64
+        bg-gradient-to-b from-[#eef2ff] via-[#e0e7ff] to-[#f0f9ff]
+        backdrop-blur-md shadow-xl border-r border-white/20 p-5">
         <div className="mb-8">
           <h1 className="text-2xl italic font-extrabold text-indigo-600 tracking-wide">
             StudentVoice
@@ -27,7 +34,6 @@ export default function Navigation() {
           <p className="text-sm text-indigo-400">Empower your journey</p>
         </div>
 
-        {/* Navigation */}
         <nav className="flex flex-col gap-2">
           {navItems.map((item) => (
             <NavLink
@@ -47,18 +53,15 @@ export default function Navigation() {
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="mt-auto pt-6 text-center text-xs text-indigo-400 opacity-70">
           © {new Date().getFullYear()} Student Voice
         </div>
       </aside>
 
-      {/* 📱 Mobile Bottom Navbar */}
-      <nav
-        className="fixed font-serif bottom-0 left-0 right-0 z-40 flex justify-around
-          bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#f0f9ff]
-          backdrop-blur-md shadow-t-md md:hidden py-2"
-      >
+      {/* Mobile Navbar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-around
+        bg-gradient-to-r from-[#eef2ff] via-[#e0e7ff] to-[#f0f9ff]
+        backdrop-blur-md shadow-t-md md:hidden py-2">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -77,7 +80,7 @@ export default function Navigation() {
         ))}
       </nav>
 
-      {/* Spacer so content is not hidden behind sidebar/navbar */}
+      {/* Spacer */}
       <div className="pt-0 md:ml-64 pb-16 md:pb-0"></div>
     </>
   );
