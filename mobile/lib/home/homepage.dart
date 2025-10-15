@@ -18,13 +18,7 @@ class _HomeTabState extends State<HomeTab> {
   String? token;
   bool surveyCompleted = false;
 
-  List<Map<String, String>> otherColleges = [
-    {"name": "Anna University, Chennai"},
-    {"name": "PSG College of Technology, Coimbatore"},
-    {"name": "Coimbatore Institute of Technology"},
-    {"name": "SSN College of Engineering, Chennai"},
-    {"name": "Thiagarajar College of Engineering, Madurai"},
-  ];
+  List<Map<String, String>> fetchedColleges = []; // <-- only API data
 
   @override
   void initState() {
@@ -56,6 +50,7 @@ class _HomeTabState extends State<HomeTab> {
           surveyCompleted = data['user']['surveyCompleted'] ?? false;
           _isLoading = false;
         });
+        await _fetchAnswers();
       } else {
         print("❌ Error fetching user: ${response.body}");
         setState(() => _isLoading = false);
@@ -63,6 +58,38 @@ class _HomeTabState extends State<HomeTab> {
     } catch (e) {
       print("❌ Exception: $e");
       setState(() => _isLoading = false);
+    }
+  }
+  Future<void> _fetchAnswers() async {
+    try {
+      final response = await http.get(
+        Uri.parse("https://student-voice.onrender.com/api/questions/allcollege"),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        print("✅ Fetched Answers from API: $data"); // Check the console
+
+        // Handle different possible formats
+        if (data is List) {
+          setState(() {
+            fetchedColleges = data
+                .map((e) {
+              if (e is String) return {"name": e};
+              if (e is Map && e.containsKey("name")) return {"name": e["name"]};
+              return null;
+            })
+                .whereType<Map<String, String>>()
+                .toList();
+          });
+        } else {
+          print("❌ Unexpected API format for colleges");
+        }
+      } else {
+        print("❌ Failed to fetch answers: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Exception fetching answers: $e");
     }
   }
 
@@ -73,7 +100,7 @@ class _HomeTabState extends State<HomeTab> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 60, 16, 16), // more top space
+        padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -124,7 +151,8 @@ class _HomeTabState extends State<HomeTab> {
                             _fetchUser();
                           });
                         },
-                        icon: const Icon(Icons.edit, color: Colors.white),
+                        icon:
+                        const Icon(Icons.edit, color: Colors.white),
                         label: Text(
                           surveyCompleted
                               ? "Survey Completed"
@@ -176,17 +204,18 @@ class _HomeTabState extends State<HomeTab> {
                 ],
               ),
             ),
-            const SizedBox(height: 20), // space between your card & title
+            const SizedBox(height: 25),
             const Text(
               "All Colleges Reports",
-              style:
-              TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo),
             ),
-            const SizedBox(height: 12), // reduced space before first card
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: otherColleges.length,
+              itemCount: fetchedColleges.length,
               separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 return Container(
@@ -205,9 +234,9 @@ class _HomeTabState extends State<HomeTab> {
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 8),
                     title: Text(
-                      otherColleges[index]['name']!,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold),
+                      fetchedColleges[index]['name']!,
+                      style:
+                      const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text("View reports"),
                     trailing: const Icon(Icons.arrow_forward_ios),
@@ -217,7 +246,7 @@ class _HomeTabState extends State<HomeTab> {
                         MaterialPageRoute(
                           builder: (_) => ReportPage(
                               collegeName:
-                              otherColleges[index]['name']!),
+                              fetchedColleges[index]['name']!),
                         ),
                       );
                     },

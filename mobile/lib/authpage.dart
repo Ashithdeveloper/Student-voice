@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/home/mainpage.dart';
+import 'package:mobile/login/login_select_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../login/user_login.dart';
 
@@ -37,7 +38,7 @@ class _AuthPageState extends State<AuthPage> {
         // Navigate to Login if no token
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const UserLoginPage()),
+          MaterialPageRoute(builder: (_) => const LoginSelectionPage()),
         );
       }
     }
