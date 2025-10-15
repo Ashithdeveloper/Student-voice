@@ -1,6 +1,6 @@
 import express from "express"
 import verifyToken from "../middleware/token.middleware.js";
-import { addComment, allPostList, createPost, likeOrUnlikePost, userPostList } from "../controller/postCommunity.controller.js";
+import { addComment, allPostList, createPost, likeOrUnlikePost, showComment, userPostList } from "../controller/postCommunity.controller.js";
 
 const router = express.Router();
 
@@ -16,6 +16,8 @@ router.post("/:id/comment", verifyToken, addComment);
 router.get("/userpostlist",verifyToken, userPostList);
 //get all post list
 router.get("/allpostlist", allPostList);
+//post comment show 
+router.get("/:id/comment", verifyToken, showComment);
 
 
 export default router

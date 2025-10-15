@@ -92,7 +92,7 @@ export const addComment = async (req, res) => {
     }
 
     // 2️⃣ Find the post by ID
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId).populate("user", "name isVerified ,role");
     if (!post) {
       return res
         .status(404)
@@ -120,6 +120,20 @@ export const addComment = async (req, res) => {
     return res.status(500).json({ message: "Server error", success: false });
   }
 };
+//show comment for that post
+export const showComment = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await Post.findById(postId).populate("user", "name isVerified ,role");
+        if (!post) {
+            return res.status(404).json({ message: "Post not found", success: false });
+        }
+        return res.status(200).json({ success: true, post });
+    } catch (error) {
+        console.error("Show Comment Error:", error);
+        return res.status(500).json({ message: "Server error", success: false });
+    }
+}
 
 //user post list '
 export const userPostList = async (req, res) => {
@@ -129,7 +143,9 @@ export const userPostList = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found", success: false });
         }
-        const posts = await Post.find({ user: userId }).sort({ createdAt: -1 });
+        const posts = await Post.find({ user: userId })
+          .sort({ createdAt: -1 })
+          .populate("user", "name isVerified ,role");
         if(!posts) {
             return res.status(404).json({ message: "Posts not found", success: false });
         }
@@ -141,7 +157,11 @@ export const userPostList = async (req, res) => {
 //all post list 
 export const allPostList = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 });
+          const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .populate("user", "name isVerified role")
+            .populate("comments.user", "name isVerified role");
+
         if(!posts) {
             return res.status(404).json({ message: "Posts not found", success: false });
         }
