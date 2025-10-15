@@ -11,23 +11,28 @@ export default function CollegeSearch() {
   const [filters, setFilters] = useState({ type: "All", date: "Anytime" });
   const [results, setResults] = useState([]);
 
-  // Fetch colleges once on mount
   useEffect(() => {
     dispatch(fetchColleges());
   }, [dispatch]);
 
-  // Live filtering
   useEffect(() => {
     if (!colleges || colleges.length === 0) return setResults([]);
 
     const filtered = colleges.filter((item) => {
-      const displayName = item?.name || item?.title || item?.label || "";
-      const itemType = item?.type || "Other";
+      const displayName = (
+        item?.collegename || item?.name || item?.title || item?.label || ""
+      ).toLowerCase();
+      const itemType = (item?.type || "other").toLowerCase();
       const itemDate = item?.date ? new Date(item.date) : null;
 
-      const matchesQuery = displayName.toLowerCase().includes(query.toLowerCase());
-      const matchesType = filters.type === "All" ? true : itemType === filters.type;
+      // Check query match
+      const matchesQuery = displayName.includes(query.toLowerCase());
 
+      // Check type filter
+      const filterType = filters.type.toLowerCase();
+      const matchesType = filterType === "all" ? true : itemType === filterType;
+
+      // Check date filter
       let matchesDate = true;
       if (filters.date !== "Anytime" && itemDate) {
         const today = new Date();
@@ -56,24 +61,22 @@ export default function CollegeSearch() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto p-4 font-serif">
       <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-600 text-center">
-        Search Results
+        Search Colleges, Surveys, and Events
       </h1>
 
-      {/* Search & Filter Form */}
+      {/* Search & Filters */}
       <div className="flex flex-col md:flex-wrap md:flex-row gap-4 items-center bg-white/80 backdrop-blur-lg p-4 rounded-2xl shadow-md">
-        {/* Search Box */}
         <div className="relative w-full md:flex-1">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name, title, or label..."
+            placeholder="Search by name..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
           />
         </div>
 
-        {/* Type Filter */}
         <select
           value={filters.type}
           onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -86,7 +89,6 @@ export default function CollegeSearch() {
           <option>Event</option>
         </select>
 
-        {/* Date Filter */}
         <select
           value={filters.date}
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
@@ -99,7 +101,6 @@ export default function CollegeSearch() {
           <option>Last 90 days</option>
         </select>
 
-        {/* Reset Button */}
         <button
           onClick={handleReset}
           className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition-all mt-2 md:mt-0"
@@ -114,12 +115,12 @@ export default function CollegeSearch() {
           <p className="text-center text-gray-500 animate-pulse">Loading data...</p>
         ) : results.length === 0 ? (
           <p className="text-center text-gray-500 italic text-lg">
-            No search results found. Adjust filters or keywords to try again.
+            No results found. Try another keyword or adjust filters.
           </p>
         ) : (
-          <div className="text-center text-gray-500 text-lg p-4 bg-indigo-50/50 rounded-lg shadow-md">
-            No search has been performed yet. Please enter a query to see results.
-          </div>
+           <div className="text-center text-gray-500 text-lg p-4 bg-indigo-50/50 rounded-lg shadow-md">
+                No search has been performed yet. Please enter a query to see results.
+            </div>
         )}
       </div>
     </div>
