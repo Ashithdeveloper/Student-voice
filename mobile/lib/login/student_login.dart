@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:mobile/login/student_signup.dart';
-import '../homepage.dart'; // 👈 Replace with your actual homepage file path
+import 'package:shared_preferences/shared_preferences.dart';
+import 'student_signup.dart';
+import '../homepage.dart';
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -32,29 +33,46 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse("https://student-voice.onrender.com/api/auth/login"),
+        Uri.parse("https://student-voice.onrender.com/api/user/login"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email, "password": password}),
       );
 
-      final data = jsonDecode(response.body);
+      print("🔹 Status Code: ${response.statusCode}");
+      print("🔹 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"] ?? "Login successful!")),
-        );
+        final data = jsonDecode(response.body);
 
-        // Navigate to homepage after successful login
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        if (data["token"] != null) {
+          // Save token in SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", data["token"]);
+
+          // Navigate to HomePage
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login failed: Invalid response")),
+          );
+        }
       } else {
+        String message = "Login failed";
+        try {
+          final err = jsonDecode(response.body);
+          if (err["message"] != null) message = err["message"];
+        } catch (_) {}
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"] ?? "Login failed")),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
+      print("❗ Error during login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -87,7 +105,6 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-
               _buildCard(
                 child: Column(
                   children: [
@@ -122,13 +139,17 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                           backgroundColor: Colors.indigo,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                              borderRadius: BorderRadius.circular(12)),
                           elevation: 4,
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(
-                          color: Colors.white,
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                             : const Text(
                           "Login",

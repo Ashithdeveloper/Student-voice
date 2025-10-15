@@ -74,7 +74,7 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
       _isLoading = true; // Start loading
     });
 
-    final uri = Uri.parse("https://student-voice.onrender.com/api/auth/studentsignup");
+    final uri = Uri.parse("https://student-voice.onrender.com/api/user/signup");
 
     var request = http.MultipartRequest('POST', uri);
     request.fields['name'] = nameController.text.trim();

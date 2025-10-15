@@ -32,7 +32,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse("https://student-voice.onrender.com/api/auth/login");
+      final url = Uri.parse("https://student-voice.onrender.com/api/user/login");
       final response = await http.post(
         url,
         headers: {

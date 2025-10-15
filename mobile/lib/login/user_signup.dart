@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:mobile/login/user_login.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../homepage.dart';
+import 'user_login.dart';
 
 class UserSignupPage extends StatefulWidget {
   const UserSignupPage({super.key});
@@ -13,6 +17,74 @@ class _UserSignupPageState extends State<UserSignupPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isObscure = true;
+  bool _isLoading = false;
+
+  Future<void> signupUser() async {
+    final name = usernameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final url = Uri.parse("https://student-voice.onrender.com/api/user/userlogin");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": name,
+          "email": email,
+          "password": password,
+          "role": "viewer",
+        }),
+      );
+
+      print("🔹 Status Code: ${response.statusCode}");
+      print("🔹 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data["token"] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", data["token"]);
+
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Signup failed: Invalid response")),
+          );
+        }
+      } else {
+        String message = "Signup failed";
+        try {
+          final err = jsonDecode(response.body);
+          if (err["message"] != null) message = err["message"];
+        } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      print("❗ Error during signup: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +97,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
             children: [
               const SizedBox(height: 30),
               const Text(
-                "Create User Account ",
+                "Create User Account",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -38,7 +110,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-
               _buildCard(
                 child: Column(
                   children: [
@@ -70,11 +141,11 @@ class _UserSignupPageState extends State<UserSignupPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _isLoading ? null : signupUser,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -83,7 +154,16 @@ class _UserSignupPageState extends State<UserSignupPage> {
                           ),
                           elevation: 4,
                         ),
-                        child: const Text(
+                        child: _isLoading
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : const Text(
                           "Sign Up",
                           style: TextStyle(
                               color: Colors.white,
@@ -161,6 +241,8 @@ class _UserSignupPageState extends State<UserSignupPage> {
         prefixIcon: Icon(icon),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.grey[50],
       ),
     );
   }
