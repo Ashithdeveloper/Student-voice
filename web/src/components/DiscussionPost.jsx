@@ -1,27 +1,34 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { toggleLike } from "../slices/appSlice";
+import { useState } from "react";
 
 export default function DiscussionPost({
   postId,
   user,
   text,
   time,
-  onComment
+  likes = [],
+  commentCount = 0,
+  currentUserId,
+  onComment,
 }) {
+  const dispatch = useDispatch();
   const displayName = user || "Anonymous";
 
-  // Like toggle state
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [optimisticLikes, setOptimisticLikes] = useState(likes);
+
+  const hasLiked = optimisticLikes.includes(currentUserId);
 
   const handleLike = () => {
-    if (liked) {
-      setLikeCount((prev) => prev - 1);
-    } else {
-      setLikeCount((prev) => prev + 1);
-    }
-    setLiked(!liked);
+    // Optimistic update
+    setOptimisticLikes((prev) =>
+      hasLiked ? prev.filter((id) => id !== currentUserId) : [...prev, currentUserId]
+    );
+
+    // Backend update
+    dispatch(toggleLike(postId));
   };
 
   return (
@@ -53,11 +60,11 @@ export default function DiscussionPost({
         <button
           onClick={handleLike}
           className={`flex items-center gap-1 px-2 py-1 rounded transition ${
-            liked ? "bg-pink-100 text-pink-600" : "bg-indigo-100 hover:bg-indigo-200"
+            hasLiked ? "bg-pink-100 text-pink-600" : "bg-indigo-100 hover:bg-indigo-200"
           }`}
         >
-          {liked ? <FaHeart className="text-pink-500" /> : <FaRegHeart />}
-          <span>{likeCount}</span>
+          {hasLiked ? <FaHeart className="text-pink-500" /> : <FaRegHeart />}
+          <span>{optimisticLikes.length}</span>
         </button>
 
         {/* Comment Button */}
@@ -66,7 +73,7 @@ export default function DiscussionPost({
             onClick={onComment}
             className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded flex items-center gap-1"
           >
-            💬 <span>Comment</span>
+            💬 <span>{commentCount} Comment{commentCount !== 1 && "s"}</span>
           </button>
         )}
       </div>
