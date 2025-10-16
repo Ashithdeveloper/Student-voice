@@ -25,6 +25,7 @@ export default function DiscussionPost({
   // If no optimistic state, fallback to prop likes
   const displayedLikes = optimisticLikes ?? likes;
 
+  // Determine if current user has liked
   const hasLiked = useMemo(
     () => currentUserId && displayedLikes.includes(currentUserId),
     [currentUserId, displayedLikes]
@@ -53,11 +54,21 @@ export default function DiscussionPost({
     >
       {/* User Info */}
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+            hasLiked ? "bg-pink-100 text-pink-600" : "bg-indigo-100 text-indigo-700"
+          }`}
+        >
           {displayName[0]?.toUpperCase()}
         </div>
         <div className="flex flex-col">
           <div className="font-semibold text-indigo-700">{displayName}</div>
+
+          {/* ✔ Participated if user liked/joined */}
+          {currentUserId && likes.includes(currentUserId) && (
+            <div className="text-xs text-green-600">✔ Participated</div>
+          )}
+
           <div className="text-gray-400 text-xs">
             {time ? new Date(time).toLocaleString() : ""}
           </div>
