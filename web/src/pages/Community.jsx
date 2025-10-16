@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDiscussions, createDiscussion, addTempPost } from "../slices/appSlice";
 import DiscussionPost from "../components/DiscussionPost";
@@ -15,7 +16,7 @@ export default function Community() {
   }, [dispatch]);
 
   const handleCreatePost = async () => {
-    if (!newPost.trim()) return alert("Post cannot be empty");
+    if (!newPost.trim()) return toast.warn("Post cannot be empty");
 
     const tempPost = {
       _id: `temp-${Date.now()}`,
