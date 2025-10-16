@@ -23,6 +23,7 @@ class _ReportPageState extends State<ReportPage> {
   Map<String, dynamic>? reportData;
   bool _isLoading = true;
   String? token;
+  int studentCount = 0; // <-- Added to store student count
 
   @override
   void initState() {
@@ -53,10 +54,15 @@ class _ReportPageState extends State<ReportPage> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+
         setState(() {
           reportData = data['result']['results'];
+          studentCount = data['studentCount'] ?? 0; // <-- fetch student count
           _isLoading = false;
         });
+
+        debugPrint("✅ Report Data: $reportData");
+        debugPrint("📊 Student Count: $studentCount");
       } else {
         debugPrint("❌ Error fetching report: ${response.body}");
         setState(() => _isLoading = false);
@@ -86,13 +92,13 @@ class _ReportPageState extends State<ReportPage> {
       );
     }
 
+    // Extract report data
     final double mental = (reportData!['mental_health'] as num).toDouble();
     final double placement =
     (reportData!['placement_training'] as num).toDouble();
     final double skill = (reportData!['skill_training'] as num).toDouble();
     final double total = (reportData!['total_score_college'] as num).toDouble();
-    final overall =
-        reportData!['overall_explanation'] ?? "No explanation available";
+    final overall = reportData!['overall_explanation'] ?? "No explanation available";
 
     // Chart colors
     final chartColors = [
@@ -123,7 +129,7 @@ class _ReportPageState extends State<ReportPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // College Card
+              // College Card with Student Count
               Card(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
@@ -149,10 +155,20 @@ class _ReportPageState extends State<ReportPage> {
                             color: Colors.indigo),
                       ),
                       const SizedBox(height: 8),
-                      Text("College Survey Overview",
-                          style: TextStyle(
-                              fontSize: contentFontSize,
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        "College Survey Overview",
+                        style: TextStyle(
+                            fontSize: contentFontSize,
+                            fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Total Students Surveyed: $studentCount", // <-- student count displayed
+                        style: TextStyle(
+                            fontSize: contentFontSize,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87),
+                      ),
                     ],
                   ),
                 ),
@@ -170,8 +186,8 @@ class _ReportPageState extends State<ReportPage> {
               SizedBox(
                 height: 220,
                 child: SfCircularChart(
-                  legend: Legend(
-                      isVisible: true, position: LegendPosition.bottom),
+                  legend:
+                  Legend(isVisible: true, position: LegendPosition.bottom),
                   series: <PieSeries<ChartData, String>>[
                     PieSeries<ChartData, String>(
                       dataSource: pieData,
@@ -184,6 +200,7 @@ class _ReportPageState extends State<ReportPage> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // Bar Chart
