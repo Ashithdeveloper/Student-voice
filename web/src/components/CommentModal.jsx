@@ -1,16 +1,18 @@
-import { useEffect, useState, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { addComment, fetchComments } from "../slices/appSlice";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchComments,
+  addComment,
+  selectCommentsByPost,
+  addTempComment,
+} from "../slices/appSlice";
+import { v4 as uuidv4 } from "uuid";
 
 export default function CommentModal({ postId, onClose }) {
   const dispatch = useDispatch();
-  const comments = useSelector((state) => state.app.comments[postId] || []);
-  const user = useSelector((state) => state.app.user);
-
+  const comments = useSelector((state) => selectCommentsByPost(state, postId));
   const [newComment, setNewComment] = useState("");
-  const inputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch comments when modal opens
   useEffect(() => {
@@ -19,91 +21,84 @@ export default function CommentModal({ postId, onClose }) {
     }
   }, [dispatch, postId]);
 
-  // Handle submitting a new comment
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    dispatch(addComment({ postId, text: newComment }));
+
+    // Optimistic UI: temporary comment
+    const tempId = `temp-${uuidv4()}`;
+    const tempComment = {
+      _id: tempId,
+      user: { name: "You", verified: true },
+      text: newComment,
+      time: new Date().toISOString(),
+    };
+    dispatch(addTempComment({ postId, comment: tempComment }));
     setNewComment("");
-    inputRef.current?.focus();
+
+    try {
+      setLoading(true);
+      await dispatch(addComment({ postId, comment: tempComment.text })).unwrap();
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="bg-white max-w-lg w-full mx-4 rounded-2xl shadow-lg p-5 relative flex flex-col max-h-[80vh]"
-        initial={{ y: 30 }}
-        animate={{ y: 0 }}
-        exit={{ y: 30 }}
-      >
-        {/* Close Button */}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative flex flex-col">
         <button
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
         >
-          <X size={20} />
+          ✖
         </button>
 
-        <h2 className="text-xl font-semibold text-indigo-700 mb-4">
-          💬 Comments
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Comments</h2>
 
-        {/* Comment List */}
-        <div className="flex-1 overflow-y-auto mb-4 pr-2">
-          <AnimatePresence>
-            {comments.length > 0 ? (
-              comments.map((c) => (
-                <motion.div
-                  key={c._id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="border-b border-gray-200 py-2 flex gap-3"
-                >
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700">
-                    {c.user?.name?.[0]?.toUpperCase() || "A"}
+        <div className="flex-1 overflow-y-auto max-h-80 mb-4">
+          {comments.length === 0 ? (
+            <p className="text-gray-500 italic">No comments yet.</p>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {comments.map((c) => (
+                <li key={c._id || c.id} className="py-2">
+                  <div className="font-semibold text-indigo-700 flex items-center gap-1">
+                    {c.user?.name || "Anonymous"} {c.user?.verified && <span className="text-yellow-400">✨</span>}
                   </div>
-                  <div>
-                    <div className="font-semibold text-indigo-700">
-                      {c.user?.name || "Anonymous"}
-                    </div>
-                    <div className="text-sm text-gray-600">{c.text}</div>
+                  <div className="text-gray-700">{c.text}</div>
+                  {c.time && (
                     <div className="text-xs text-gray-400">
-                      {new Date(c.createdAt).toLocaleString()}
+                      {new Date(c.time).toLocaleString()}
                     </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-gray-400 text-center py-4">
-                No comments yet. Be the first!
-              </div>
-            )}
-          </AnimatePresence>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Input Box */}
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <input
-            ref={inputRef}
             type="text"
+            placeholder="Add a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Write a comment..."
-            className="flex-1 border rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-300"
+            className="flex-1 px-3 py-2 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
           />
           <button
             onClick={handleAddComment}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full"
+            disabled={loading}
+            className={`px-4 py-2 rounded-lg text-white ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
           >
-            Send
+            {loading ? "Adding..." : "Add"}
           </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

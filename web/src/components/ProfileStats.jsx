@@ -4,46 +4,51 @@ import { motion } from "framer-motion";
 
 export default function ProfileStats() {
   const user = useSelector((state) => state.auth.user);
-
   if (!user) return null;
 
+  // Dynamic stats
   const stats = [
     {
       label: "Surveys",
       value: user.surveysCompleted || 0,
-      gradient: "from-indigo-100 via-purple-100 to-pink-100",
+      gradient: "from-indigo-400 via-purple-400 to-pink-400",
+      icon: "📊",
     },
     {
       label: "Discussions",
       value: user.discussionsJoined || 0,
-      gradient: "from-green-100 via-teal-100 to-blue-100",
-    },
-    {
-      label: "Events",
-      value: user.eventsAttended || 0,
-      gradient: "from-yellow-100 via-orange-100 to-red-100",
+      gradient: "from-green-400 via-teal-400 to-blue-400",
+      icon: "💬",
     },
     {
       label: "Points",
       value: user.points || 0,
-      gradient: "from-pink-100 via-purple-100 to-indigo-100",
+      gradient: "from-pink-400 via-purple-400 to-indigo-400",
+      icon: "⭐",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl mx-auto">
-      {stats.map((stat) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className={`p-4 rounded-2xl shadow-md bg-gradient-to-br ${stat.gradient} text-gray-800 flex flex-col items-center justify-center hover:scale-105 transition-transform`}
-        >
-          <p className="text-xl sm:text-2xl md:text-3xl font-extrabold">{stat.value}</p>
-          <p className="text-xs sm:text-sm md:text-base mt-1">{stat.label}</p>
-        </motion.div>
-      ))}
+    <div className="w-full flex justify-center mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl">
+        {stats.map((stat) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className={`flex flex-col items-center justify-center p-6 rounded-3xl shadow-xl bg-gradient-to-br ${stat.gradient} text-white transform hover:scale-105 transition-transform`}
+          >
+            <div className="text-4xl mb-3">{stat.icon}</div>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold">
+              {stat.value.toLocaleString()}
+            </p>
+            <p className="text-sm sm:text-base md:text-lg mt-1 tracking-wide">
+              {stat.label}
+            </p>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

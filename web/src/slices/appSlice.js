@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import axiosInstance from "../utils/axios";
 
 // ================= ASYNC THUNKS ================= //
@@ -23,7 +23,13 @@ export const fetchDiscussions = createAsyncThunk(
     try {
       const res = await axiosInstance.get("/api/post/allpostlist");
       const data = Array.isArray(res.data) ? res.data : res.data.posts || [];
-      return data;
+      // Ensure likes & commentCount exist and user info
+      return data.map(post => ({
+        ...post,
+        likes: post.likes || [],
+        commentCount: post.commentCount || 0,
+        user: post.user || { name: "Anonymous", verified: false },
+      }));
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch discussions");
     }
@@ -37,7 +43,12 @@ export const createDiscussion = createAsyncThunk(
     if (!text?.trim()) return rejectWithValue("Post content is required.");
     try {
       const res = await axiosInstance.post("/api/post/postcreate", { text: text.trim() });
-      return res.data; // should return the saved post object
+      return {
+        ...res.data,
+        likes: res.data.likes || [],
+        commentCount: res.data.commentCount || 0,
+        user: res.data.user || { name: "Anonymous", verified: false },
+      };
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to create discussion");
     }
@@ -50,7 +61,7 @@ export const toggleLike = createAsyncThunk(
   async (postId, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(`/api/post/${postId}/like`);
-      return res.data; // updated post with likes
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to like post");
     }
@@ -113,15 +124,12 @@ const appSlice = createSlice({
   name: "app",
   initialState,
   reducers: {
-    // Temp Post Handling (Optimistic UI)
     addTempPost: (state, action) => {
       state.discussions.unshift(action.payload);
     },
     clearTempPosts: (state) => {
       state.discussions = state.discussions.filter(p => !p._id?.startsWith("temp-"));
     },
-
-    // Temp Comments Handling
     addTempComment: (state, action) => {
       const { postId, comment } = action.payload;
       if (!state.comments[postId]) state.comments[postId] = [];
@@ -134,10 +142,9 @@ const appSlice = createSlice({
       }
     },
   },
-
   extraReducers: (builder) => {
     builder
-      // 📊 Surveys
+      // Surveys
       .addCase(fetchSurveys.pending, (state) => { state.loading.surveys = true; })
       .addCase(fetchSurveys.fulfilled, (state, action) => {
         state.loading.surveys = false;
@@ -148,7 +155,7 @@ const appSlice = createSlice({
         state.error = action.payload;
       })
 
-      // 💬 Discussions
+      // Discussions
       .addCase(fetchDiscussions.pending, (state) => { state.loading.discussions = true; })
       .addCase(fetchDiscussions.fulfilled, (state, action) => {
         state.loading.discussions = false;
@@ -160,31 +167,22 @@ const appSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createDiscussion.fulfilled, (state, action) => {
-        // Remove temp posts & prepend the saved post
         state.discussions = state.discussions.filter(p => !p._id?.startsWith("temp-"));
         state.discussions.unshift(action.payload);
       })
 
-      // ❤️ Toggle Like
+      // Toggle Like
       .addCase(toggleLike.fulfilled, (state, action) => {
         const index = state.discussions.findIndex(p => p._id === action.payload._id);
-        if (index !== -1) {
-          state.discussions = [
-            ...state.discussions.slice(0, index),
-            action.payload,
-            ...state.discussions.slice(index + 1),
-          ];
-        }
+        if (index !== -1) state.discussions[index] = action.payload;
       })
 
-      // 💬 Comments
+      // Comments
       .addCase(fetchComments.fulfilled, (state, action) => {
         const { postId, comments } = action.payload;
         state.comments[postId] = comments || [];
         const postIndex = state.discussions.findIndex(p => p._id === postId);
-        if (postIndex !== -1) {
-          state.discussions[postIndex].commentCount = comments.length;
-        }
+        if (postIndex !== -1) state.discussions[postIndex].commentCount = comments.length;
       })
       .addCase(addComment.fulfilled, (state, action) => {
         const { postId, comment } = action.payload;
@@ -199,7 +197,7 @@ const appSlice = createSlice({
         }
       })
 
-      // 🤖 AI
+      // AI
       .addCase(askAI.pending, (state) => { state.loading.ai = true; })
       .addCase(askAI.fulfilled, (state, action) => {
         state.loading.ai = false;
@@ -212,9 +210,26 @@ const appSlice = createSlice({
   },
 });
 
-// ================= SELECTORS ================= //
-const emptyArray = [];
-export const selectCommentsByPost = (state, postId) => state.app.comments[postId] || emptyArray;
+// ================= MEMOIZED SELECTORS ================= //
+export const selectDiscussions = (state) => state.app.discussions || [];
+export const selectCommentsState = (state) => state.app.comments || {};
+
+export const selectCommentsByPost = createSelector(
+  [selectCommentsState, (_, postId) => postId],
+  (comments, postId) => comments[postId] || []
+);
+
+// Selector to get verified posts
+export const selectVerifiedPosts = createSelector(
+  [selectDiscussions],
+  (discussions) => discussions.map(post => ({
+    ...post,
+    user: {
+      ...post.user,
+      verified: post.user?.verified || false,
+    }
+  }))
+);
 
 // ================= EXPORTS ================= //
 export const {

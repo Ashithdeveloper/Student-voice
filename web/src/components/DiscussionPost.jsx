@@ -15,12 +15,14 @@ export default function DiscussionPost({
   onComment,
 }) {
   const dispatch = useDispatch();
-  const displayName = user || "Anonymous";
 
-  // Local state for optimistic update
+  // Safely get display name
+  const displayName = (typeof user === "string" ? user : user?.name) || "Anonymous";
+
+  // Local state for optimistic like updates
   const [optimisticLikes, setOptimisticLikes] = useState(null);
 
-  // If no optimistic update exists, use prop likes
+  // If no optimistic state, fallback to prop likes
   const displayedLikes = optimisticLikes ?? likes;
 
   const hasLiked = useMemo(
@@ -31,7 +33,7 @@ export default function DiscussionPost({
   const handleLike = () => {
     if (!currentUserId) return;
 
-    // Optimistic UI
+    // Optimistic UI update
     setOptimisticLikes(
       hasLiked
         ? displayedLikes.filter((id) => id !== currentUserId)
@@ -52,7 +54,7 @@ export default function DiscussionPost({
       {/* User Info */}
       <div className="flex items-center gap-2 mb-2">
         <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-          {displayName[0].toUpperCase()}
+          {displayName[0]?.toUpperCase()}
         </div>
         <div className="flex flex-col">
           <div className="font-semibold text-indigo-700">{displayName}</div>
@@ -66,12 +68,14 @@ export default function DiscussionPost({
       <p className="text-gray-700 mb-3">{text}</p>
 
       {/* Actions */}
-      <div className="flex gap-4 text-indigo-600 text-sm items-center">
+      <div className="flex gap-4 text-sm items-center">
         {/* Like Button */}
         <button
           onClick={handleLike}
           className={`flex items-center gap-1 px-2 py-1 rounded transition ${
-            hasLiked ? "bg-pink-100 text-pink-600" : "bg-indigo-100 hover:bg-indigo-200"
+            hasLiked
+              ? "bg-pink-100 text-pink-600 hover:bg-pink-200"
+              : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
           }`}
         >
           {hasLiked ? <FaHeart className="text-pink-500" /> : <FaRegHeart />}
@@ -82,7 +86,7 @@ export default function DiscussionPost({
         {onComment && (
           <button
             onClick={onComment}
-            className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded flex items-center gap-1"
+            className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded flex items-center gap-1 text-indigo-600"
           >
             💬 <span>{commentCount} Comment{commentCount !== 1 ? "s" : ""}</span>
           </button>
