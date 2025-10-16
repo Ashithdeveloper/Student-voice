@@ -1,96 +1,75 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
 
 export default function DiscussionPost({
+  postId,
   user,
-  time,
   text,
-  initialLikes = 0,
-  comments = [],
-  showComments = false,
-  onToggleComments,
-  onLike,
-  onAddComment,
+  time,
+  onComment
 }) {
-  const [likes, setLikes] = useState(initialLikes);
-  const [commentText, setCommentText] = useState("");
+  const displayName = user || "Anonymous";
+
+  // Like toggle state
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   const handleLike = () => {
-    setLikes((prev) => prev + 1);
-    onLike && onLike();
-  };
-
-  const handleSubmitComment = (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-    onAddComment && onAddComment(commentText);
-    setCommentText("");
+    if (liked) {
+      setLikeCount((prev) => prev - 1);
+    } else {
+      setLikeCount((prev) => prev + 1);
+    }
+    setLiked(!liked);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      className="mb-5 p-5 rounded-2xl bg-white border border-indigo-100 shadow-md hover:shadow-lg transition-all"
+      exit={{ opacity: 0, y: 15 }}
+      className="max-w-full p-4 rounded-2xl shadow-md border bg-white/80 border-indigo-200"
     >
-      {/* Header */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="font-semibold text-indigo-700 text-lg">{user}</div>
-        <div className="text-xs text-gray-400">{time}</div>
+      {/* User Info */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+          {displayName[0].toUpperCase()}
+        </div>
+        <div className="flex flex-col">
+          <div className="font-semibold text-indigo-700">{displayName}</div>
+          <div className="text-gray-400 text-xs">
+            {time ? new Date(time).toLocaleString() : ""}
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <p className="text-gray-700 text-sm md:text-base mb-4">{text}</p>
+      {/* Post Text */}
+      <p className="text-gray-700 mb-3">{text}</p>
 
       {/* Actions */}
-      <div className="flex gap-4 text-sm font-medium text-indigo-600 mb-3">
+      <div className="flex gap-4 text-indigo-600 text-sm items-center">
+        {/* Like Button */}
         <button
           onClick={handleLike}
-          className="px-3 py-1 bg-indigo-100 hover:bg-indigo-200 rounded-full transition"
+          className={`flex items-center gap-1 px-2 py-1 rounded transition ${
+            liked ? "bg-pink-100 text-pink-600" : "bg-indigo-100 hover:bg-indigo-200"
+          }`}
         >
-          👍 Like ({likes})
+          {liked ? <FaHeart className="text-pink-500" /> : <FaRegHeart />}
+          <span>{likeCount}</span>
         </button>
-        <button
-          onClick={onToggleComments}
-          className="px-3 py-1 bg-indigo-100 hover:bg-indigo-200 rounded-full transition"
-        >
-          💬 {showComments ? "Hide Comments" : `Comments (${comments.length})`}
-        </button>
+
+        {/* Comment Button */}
+        {onComment && (
+          <button
+            onClick={onComment}
+            className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded flex items-center gap-1"
+          >
+            💬 <span>Comment</span>
+          </button>
+        )}
       </div>
-
-      {/* Comments */}
-      {showComments && (
-        <div className="mt-3 space-y-3">
-          {comments.length === 0 && (
-            <p className="text-gray-400 text-sm italic">No comments yet.</p>
-          )}
-          {comments.map((c, idx) => (
-            <div
-              key={idx}
-              className="p-2 rounded-lg bg-indigo-50 text-indigo-800 text-sm md:text-base"
-            >
-              {c.text || c}
-            </div>
-          ))}
-
-          <form onSubmit={handleSubmitComment} className="flex gap-2 mt-2">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment..."
-              className="flex-1 p-2 rounded-2xl border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-sm md:text-base"
-            />
-            <button
-              type="submit"
-              className="px-4 py-1 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all text-sm md:text-base font-semibold"
-            >
-              Post
-            </button>
-          </form>
-        </div>
-      )}
     </motion.div>
   );
 }

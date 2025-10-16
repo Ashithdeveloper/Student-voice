@@ -1,76 +1,74 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchDiscussions, createDiscussion, addTempPost } from "../slices/appSlice";
 import DiscussionPost from "../components/DiscussionPost";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchDiscussions, toggleLike, addComment, fetchComments } from "../slices/appSlice";
+import CommentModal from "../components/CommentModal";
 
 export default function Community() {
   const dispatch = useDispatch();
-  const { discussions = [], loading } = useSelector((state) => state.app);
-
-  const [commentsVisible, setCommentsVisible] = useState({});
+  const discussions = useSelector(state => state.app.discussions);
+  const [newPost, setNewPost] = useState("");
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchDiscussions());
   }, [dispatch]);
 
-  const handleToggleComments = (postId) => {
-    setCommentsVisible((prev) => ({ ...prev, [postId]: !prev[postId] }));
-    if (!commentsVisible[postId]) dispatch(fetchComments(postId));
-  };
+  const handleCreatePost = async () => {
+    if (!newPost.trim()) return alert("Post cannot be empty");
 
-  const handleLike = async (postId) => {
-    await dispatch(toggleLike(postId));
-  };
+    const tempPost = {
+      _id: `temp-${Date.now()}`,
+      text: newPost,
+      user: { name: "You" },
+      createdAt: new Date().toISOString(),
+    };
 
-  const handleAddComment = async (postId, comment) => {
-    if (!comment.trim()) return;
-    await dispatch(addComment({ postId, comment }));
+    dispatch(addTempPost(tempPost));
+    setNewPost("");
+
+    try {
+      await dispatch(createDiscussion({ content: tempPost.text }));
+    } catch (err) {
+      console.error("Failed to save post:", err);
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
-      <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-700 mb-8 text-center">
-        Community Discussions
-      </h1>
+    <div className="p-4 flex font-serif flex-col gap-4">
+      <h1 className="text-2xl text-center font-bold">Community Discussions</h1>
+      <textarea
+        value={newPost}
+        onChange={(e) => setNewPost(e.target.value)}
+        placeholder="What's on your mind?"
+        className="w-full p-2 border rounded"
+      />
+      <button
+        onClick={handleCreatePost}
+        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+      >
+        Post
+      </button>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="discussions"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          className="space-y-6"
-        >
-          {loading.discussions && (
-            <p className="text-center text-gray-500 animate-pulse">
-              Loading discussions...
-            </p>
-          )}
+      <div className="flex flex-col gap-3 mt-4">
+        {discussions.map(post => (
+          <DiscussionPost
+            key={post._id}
+            postId={post._id}
+            user={post.user?.name}
+            text={post.text}
+            time={post.createdAt}
+            onComment={() => setSelectedPostId(post._id)}
+          />
+        ))}
+      </div>
 
-          {!loading.discussions && discussions.length === 0 && (
-            <p className="text-center text-gray-500 italic">
-              No discussions available.
-            </p>
-          )}
-
-          {!loading.discussions &&
-            discussions.map((d) => (
-              <DiscussionPost
-                key={d._id}
-                user={d.userName}
-                time={d.timeAgo}
-                text={d.content}
-                initialLikes={d.likes}
-                comments={d.comments || []}
-                showComments={commentsVisible[d._id] || false}
-                onToggleComments={() => handleToggleComments(d._id)}
-                onLike={() => handleLike(d._id)}
-                onAddComment={(comment) => handleAddComment(d._id, comment)}
-              />
-            ))}
-        </motion.div>
-      </AnimatePresence>
+      {selectedPostId && (
+        <CommentModal
+          postId={selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+        />
+      )}
     </div>
   );
 }
