@@ -32,7 +32,7 @@ export default function CollegeSurveyDashboard() {
   const handleViewResults = (college) => navigate(`/analytics/${encodeURIComponent(college)}`);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl font-serif mx-auto space-y-6">
       <h1 className="text-3xl font-extrabold text-indigo-600 text-center mb-6">
         🎓 College Surveys
       </h1>

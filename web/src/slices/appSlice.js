@@ -37,7 +37,7 @@ export const createDiscussion = createAsyncThunk(
     if (!text?.trim()) return rejectWithValue("Post content is required.");
     try {
       const res = await axiosInstance.post("/api/post/postcreate", { text: text.trim() });
-      return res.data;
+      return res.data; // should return the saved post object
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to create discussion");
     }
@@ -50,7 +50,7 @@ export const toggleLike = createAsyncThunk(
   async (postId, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(`/api/post/${postId}/like`);
-      return res.data; // should return updated post object with likes
+      return res.data; // updated post with likes
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to like post");
     }
@@ -153,7 +153,6 @@ const appSlice = createSlice({
       .addCase(fetchDiscussions.fulfilled, (state, action) => {
         state.loading.discussions = false;
         const tempPosts = state.discussions.filter(p => p._id?.startsWith("temp-"));
-        // merge temp posts on top
         state.discussions = [...action.payload, ...tempPosts];
       })
       .addCase(fetchDiscussions.rejected, (state, action) => {
@@ -161,25 +160,30 @@ const appSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createDiscussion.fulfilled, (state, action) => {
-        // remove temp and prepend new post
+        // Remove temp posts & prepend the saved post
         state.discussions = state.discussions.filter(p => !p._id?.startsWith("temp-"));
         state.discussions.unshift(action.payload);
       })
 
-      // ❤️ Toggle Like (update specific post)
+      // ❤️ Toggle Like
       .addCase(toggleLike.fulfilled, (state, action) => {
         const index = state.discussions.findIndex(p => p._id === action.payload._id);
-        if (index !== -1) state.discussions[index] = action.payload;
+        if (index !== -1) {
+          state.discussions = [
+            ...state.discussions.slice(0, index),
+            action.payload,
+            ...state.discussions.slice(index + 1),
+          ];
+        }
       })
 
       // 💬 Comments
       .addCase(fetchComments.fulfilled, (state, action) => {
         const { postId, comments } = action.payload;
         state.comments[postId] = comments || [];
-        // also sync comment count into post list if available
         const postIndex = state.discussions.findIndex(p => p._id === postId);
         if (postIndex !== -1) {
-          state.discussions[postIndex].commentsCount = comments.length;
+          state.discussions[postIndex].commentCount = comments.length;
         }
       })
       .addCase(addComment.fulfilled, (state, action) => {
@@ -188,11 +192,10 @@ const appSlice = createSlice({
         state.comments[postId] = state.comments[postId].filter(c => !c._id?.startsWith("temp-"));
         state.comments[postId].push(comment);
 
-        // increment comment count in discussions list
         const postIndex = state.discussions.findIndex(p => p._id === postId);
         if (postIndex !== -1) {
-          state.discussions[postIndex].commentsCount =
-            (state.discussions[postIndex].commentsCount || 0) + 1;
+          state.discussions[postIndex].commentCount =
+            (state.discussions[postIndex].commentCount || 0) + 1;
         }
       })
 

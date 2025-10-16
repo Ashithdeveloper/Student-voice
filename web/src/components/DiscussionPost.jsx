@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { toggleLike } from "../slices/appSlice";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function DiscussionPost({
   postId,
@@ -17,17 +17,28 @@ export default function DiscussionPost({
   const dispatch = useDispatch();
   const displayName = user || "Anonymous";
 
-  const [optimisticLikes, setOptimisticLikes] = useState(likes);
+  // Local state for optimistic update
+  const [optimisticLikes, setOptimisticLikes] = useState(null);
 
-  const hasLiked = optimisticLikes.includes(currentUserId);
+  // If no optimistic update exists, use prop likes
+  const displayedLikes = optimisticLikes ?? likes;
+
+  const hasLiked = useMemo(
+    () => currentUserId && displayedLikes.includes(currentUserId),
+    [currentUserId, displayedLikes]
+  );
 
   const handleLike = () => {
-    // Optimistic update
-    setOptimisticLikes((prev) =>
-      hasLiked ? prev.filter((id) => id !== currentUserId) : [...prev, currentUserId]
+    if (!currentUserId) return;
+
+    // Optimistic UI
+    setOptimisticLikes(
+      hasLiked
+        ? displayedLikes.filter((id) => id !== currentUserId)
+        : [...displayedLikes, currentUserId]
     );
 
-    // Backend update
+    // Update backend
     dispatch(toggleLike(postId));
   };
 
@@ -64,7 +75,7 @@ export default function DiscussionPost({
           }`}
         >
           {hasLiked ? <FaHeart className="text-pink-500" /> : <FaRegHeart />}
-          <span>{optimisticLikes.length}</span>
+          <span>{displayedLikes.length}</span>
         </button>
 
         {/* Comment Button */}
@@ -73,7 +84,7 @@ export default function DiscussionPost({
             onClick={onComment}
             className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 rounded flex items-center gap-1"
           >
-            💬 <span>{commentCount} Comment{commentCount !== 1 && "s"}</span>
+            💬 <span>{commentCount} Comment{commentCount !== 1 ? "s" : ""}</span>
           </button>
         )}
       </div>

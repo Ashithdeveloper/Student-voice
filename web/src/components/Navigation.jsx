@@ -24,7 +24,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col fixed top-0 left-0 h-full w-64
+      <aside className="hidden md:flex flex-col fixed top-0 left-0 h-full w-60
         bg-gradient-to-b from-[#eef2ff] via-[#e0e7ff] to-[#f0f9ff]
         backdrop-blur-md shadow-xl border-r border-white/20 p-5">
         <div className="mb-8">
