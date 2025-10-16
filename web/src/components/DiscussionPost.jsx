@@ -66,7 +66,7 @@ export default function DiscussionPost({
 
           {/* ✔ Participated if user liked/joined */}
           {currentUserId && likes.includes(currentUserId) && (
-            <div className="text-xs text-green-600">✔ Participated</div>
+            <div className="text-xs text-green-600">✔ Verified</div>
           )}
 
           <div className="text-gray-400 text-xs">
