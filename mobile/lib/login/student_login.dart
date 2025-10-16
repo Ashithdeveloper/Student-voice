@@ -52,10 +52,12 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
 
           // Navigate to HomePage
           if (mounted) {
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const MainPage()),
+                  (route) => false, // removes all previous routes
             );
+
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

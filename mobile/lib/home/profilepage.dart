@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../login/login_select_page.dart';
 import '../login/user_login.dart';
+import '../screens/CreateSchedulePage.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -64,7 +65,7 @@ class _ProfileTabState extends State<ProfileTab> {
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const LoginSelectionPage()), // Change to your login selection page
+        MaterialPageRoute(builder: (_) => const LoginSelectionPage()),
             (route) => false,
       );
     }
@@ -86,17 +87,15 @@ class _ProfileTabState extends State<ProfileTab> {
             ? const Center(
           child: Text(
             "No user data found",
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
         )
             : SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Top title text instead of AppBar
+              // Top title
               Text(
                 "My Profile",
                 style: TextStyle(
@@ -126,8 +125,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     CircleAvatar(
                       radius: 45,
                       backgroundColor: Colors.indigo.shade100,
-                      child: const Icon(Icons.person,
-                          size: 50, color: Colors.indigo),
+                      child: const Icon(Icons.person, size: 50, color: Colors.indigo),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -140,26 +138,22 @@ class _ProfileTabState extends State<ProfileTab> {
                     const SizedBox(height: 6),
                     Text(
                       user!['email'] ?? "No Email",
-                      style: const TextStyle(
-                          fontSize: 15, color: Colors.black54),
+                      style: const TextStyle(fontSize: 15, color: Colors.black54),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user!['collegename'] ?? "No College",
-                      style: const TextStyle(
-                          fontSize: 15, color: Colors.black54),
+                      style: const TextStyle(fontSize: 15, color: Colors.black54),
                     ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.verified_user,
-                            color: Colors.indigo, size: 18),
+                        const Icon(Icons.verified_user, color: Colors.indigo, size: 18),
                         const SizedBox(width: 6),
                         Text(
                           "Role: ${user!['role'] ?? 'N/A'}",
-                          style: const TextStyle(
-                              fontSize: 15, color: Colors.black87),
+                          style: const TextStyle(fontSize: 15, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -167,18 +161,13 @@ class _ProfileTabState extends State<ProfileTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.verified,
-                            color: Colors.indigo, size: 18),
+                        const Icon(Icons.verified, color: Colors.indigo, size: 18),
                         const SizedBox(width: 6),
                         Text(
-                          user!['isVerified'] == true
-                              ? "Verified Account"
-                              : "Not Verified",
+                          user!['isVerified'] == true ? "Verified Account" : "Not Verified",
                           style: TextStyle(
                             fontSize: 15,
-                            color: user!['isVerified'] == true
-                                ? Colors.green
-                                : Colors.red,
+                            color: user!['isVerified'] == true ? Colors.green : Colors.red,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -217,25 +206,49 @@ class _ProfileTabState extends State<ProfileTab> {
                       ),
                     ),
                     const Divider(height: 20, thickness: 1),
-                    _buildInfoRow(Icons.person, "Full Name",
-                        user!['name'] ?? "No Name"),
-                    _buildInfoRow(Icons.email, "Email",
-                        user!['email'] ?? "No Email"),
-                    _buildInfoRow(Icons.school, "College",
-                        user!['collegename'] ?? "No College"),
-                    _buildInfoRow(Icons.assignment_ind, "Role",
-                        user!['role'] ?? "N/A"),
-                    _buildInfoRow(
-                        Icons.verified,
-                        "Verification",
-                        user!['isVerified'] == true
-                            ? "Verified"
-                            : "Not Verified"),
+                    _buildInfoRow(Icons.person, "Full Name", user!['name'] ?? "No Name"),
+                    _buildInfoRow(Icons.email, "Email", user!['email'] ?? "No Email"),
+                    _buildInfoRow(Icons.school, "College", user!['collegename'] ?? "No College"),
+                    _buildInfoRow(Icons.assignment_ind, "Role", user!['role'] ?? "N/A"),
+                    _buildInfoRow(Icons.verified, "Verification",
+                        user!['isVerified'] == true ? "Verified" : "Not Verified"),
                   ],
                 ),
               ),
 
               const SizedBox(height: 30),
+
+              // Create Schedule Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreateSchedulePage()),
+                    );
+                  },
+                  icon: const Icon(Icons.schedule, color: Colors.white),
+                  label: const Text(
+                    "Create Schedule",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
 
               // Logout Button
               SizedBox(
@@ -253,8 +266,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -290,16 +302,11 @@ class _ProfileTabState extends State<ProfileTab> {
               children: [
                 Text(title,
                     style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54)),
+                        fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black54)),
                 const SizedBox(height: 3),
                 Text(
                   value,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600),
                 ),
               ],
             ),

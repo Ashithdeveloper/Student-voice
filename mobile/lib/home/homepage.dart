@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../screens/reportscreen.dart';
 import '../screens/surveyscreen.dart';
+import '../screens/createschedulepage.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -18,7 +19,7 @@ class _HomeTabState extends State<HomeTab> {
   String? token;
   bool surveyCompleted = false;
 
-  List<Map<String, String>> fetchedColleges = []; // <-- only API data
+  List<Map<String, String>> fetchedColleges = [];
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _HomeTabState extends State<HomeTab> {
       setState(() => _isLoading = false);
     }
   }
+
   Future<void> _fetchAnswers() async {
     try {
       final response = await http.get(
@@ -67,10 +69,6 @@ class _HomeTabState extends State<HomeTab> {
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
-        print("✅ Fetched Answers from API: $data"); // Check the console
-
-        // Handle different possible formats
         if (data is List) {
           setState(() {
             fetchedColleges = data
@@ -100,11 +98,11 @@ class _HomeTabState extends State<HomeTab> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Your College Card
+            // Your College Card with all three buttons
             Container(
               decoration: BoxDecoration(
                 color: Colors.indigo,
@@ -135,67 +133,99 @@ class _HomeTabState extends State<HomeTab> {
                         fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 16),
+                  // Buttons Row
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: surveyCompleted
-                            ? null
-                            : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                const SurveyPage()),
-                          ).then((value) {
-                            _fetchUser();
-                          });
-                        },
-                        icon:
-                        const Icon(Icons.edit, color: Colors.white),
-                        label: Text(
-                          surveyCompleted
-                              ? "Survey Completed"
-                              : "Enter Survey",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: surveyCompleted
-                              ? Colors.grey
-                              : Colors.deepPurpleAccent,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          if (user?['collegename'] != null) {
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: surveyCompleted
+                              ? null
+                              : () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReportPage(
-                                    collegeName:
-                                    user!['collegename']),
+                                  builder: (_) =>
+                                  const SurveyPage()),
+                            ).then((value) {
+                              _fetchUser();
+                            });
+                          },
+                          icon:
+                          const Icon(Icons.edit, color: Colors.white),
+                          label: Text(
+                            surveyCompleted
+                                ? "Survey Completed"
+                                : "Enter Survey",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: surveyCompleted
+                                ? Colors.grey
+                                : Colors.deepPurpleAccent,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            if (user?['collegename'] != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ReportPage(
+                                      collegeName: user!['collegename']),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.pie_chart,
+                              color: Colors.white),
+                          label: const Text(
+                            "View Report",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                const CreateSchedulePage(),
                               ),
                             );
-                          }
-                        },
-                        icon: const Icon(Icons.pie_chart,
-                            color: Colors.white),
-                        label: const Text(
-                          "View Report",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          },
+                          icon: const Icon(Icons.schedule,
+                              color: Colors.white),
+                          label: const Text(
+                            "Your Course",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
@@ -204,7 +234,10 @@ class _HomeTabState extends State<HomeTab> {
                 ],
               ),
             ),
-            const SizedBox(height: 25),
+
+            const SizedBox(height: 30), // Space between card & section
+
+            // Section Title
             const Text(
               "All Colleges Reports",
               style: TextStyle(
@@ -212,6 +245,10 @@ class _HomeTabState extends State<HomeTab> {
                   fontWeight: FontWeight.bold,
                   color: Colors.indigo),
             ),
+
+            const SizedBox(height: 16),
+
+            // List of All Colleges
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -235,8 +272,7 @@ class _HomeTabState extends State<HomeTab> {
                         horizontal: 16, vertical: 8),
                     title: Text(
                       fetchedColleges[index]['name']!,
-                      style:
-                      const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text("View reports"),
                     trailing: const Icon(Icons.arrow_forward_ios),
@@ -254,7 +290,8 @@ class _HomeTabState extends State<HomeTab> {
                 );
               },
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 30), // Bottom padding
           ],
         ),
       ),

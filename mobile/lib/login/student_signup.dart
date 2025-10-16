@@ -41,7 +41,8 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
     "VIT University, Vellore",
     "SRM Institute of Science and Technology, Kattankulathur",
     "SASTRA University, Thanjavur",
-    "Government College of Technology, Coimbatore",
+    "Government College of Technology, Coimbatore"
+
   ];
 
   Future<void> pickImage(bool isSelfie) async {
@@ -150,10 +151,12 @@ class _StudentSignupPageState extends State<StudentSignupPage> {
           const SnackBar(content: Text("Signup Successful!")),
         );
 
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainPage()),
+              (route) => false, // removes all previous routes
         );
+
       } else {
         final data = json.decode(responseBody);
         ScaffoldMessenger.of(context).showSnackBar(

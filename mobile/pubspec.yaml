@@ -43,6 +43,7 @@ dev_dependencies:
   http: ^1.1.0
   shared_preferences: ^2.1.1
   syncfusion_flutter_charts: ^31.2.2
+  url_launcher: ^6.3.2
 
 
 
